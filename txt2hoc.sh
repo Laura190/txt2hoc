@@ -39,7 +39,7 @@ else
 x=$(echo "$line" | cut -d " " -f 3)
 y=$(echo "$line" | cut -d " " -f 4)
 z=$(echo "$line" | cut -d " " -f 5)
-echo "	pt3dadd($x, $y, $z, 0)" >> $2
+echo "	pt3dadd($x, $y, $z, 1)" >> $2
 fi
 fi
 done < temp.txt
