@@ -25,22 +25,20 @@ echo "create sections[$num_sections]" >> $2
 # Reformat .txt to .hoc
 count=0
 while IFS= read -r line; do
-if [[ $line == [0-9]* ]]; then
 if [[ $line == "#"* ]]; then
-if [[ $count != 0 ]]; then
-echo "}" >> $2
-echo  >> $2
-fi
-echo "access sections[$count]" >> $2
-echo "Undefined.append()" >> $2
-echo "sections[$count] {" >> $2
-count=$(($count+1))
-else
-x=$(echo "$line" | cut -d " " -f 3)
-y=$(echo "$line" | cut -d " " -f 4)
-z=$(echo "$line" | cut -d " " -f 5)
-echo "	pt3dadd($x, $y, $z, 1)" >> $2
-fi
+  if [[ $count != 0 ]]; then
+    echo "}" >> $2
+    echo  >> $2
+  fi
+  echo "access sections[$count]" >> $2
+  echo "Undefined.append()" >> $2
+  echo "sections[$count] {" >> $2
+  count=$(($count+1))
+elif [[ $line == [0-9]* ]]; then
+  x=$(echo "$line" | cut -d " " -f 3)
+  y=$(echo "$line" | cut -d " " -f 4)
+  z=$(echo "$line" | cut -d " " -f 5)
+  echo "	pt3dadd($x, $y, $z, 1)" >> $2
 fi
 done < temp.txt
 echo "}" >> $2
