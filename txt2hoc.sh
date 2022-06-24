@@ -11,36 +11,24 @@ set -o pipefail
 # Fail on error and undefined variables
 set -eu
 
-# Remove multiple spaces from file
-tr -s " " < $1 > temp.txt
-
 # Count number of sections
-num_sections=$(grep -c "#" temp.txt)
+num_sections=$(grep -c "#" $1)
 
-# Begin output file
-echo "objref Undefined" > $2
-echo "Undefined = new SectionList()" >> $2
-echo "create sections[$num_sections]" >> $2
+# Reformats measurement lines to pt3dadd format and removes extra text
+sed '1,/#/d' $1 | awk '{ $1=""; $2="pt3dadd("; $6=",1)"; $7=""; print $2$3","$4","$5$6}' | sed -r 's/ {1,}/,/g' > temp1.txt
 
-# Reformat .txt to .hoc
-count=0
-while IFS= read -r line; do
-if [[ $line == "#"* ]]; then
-  if [[ $count != 0 ]]; then
-    echo "}" >> $2
-    echo  >> $2
-  fi
-  echo "access sections[$count]" >> $2
-  echo "Undefined.append()" >> $2
-  echo "sections[$count] {" >> $2
-  count=$(($count+1))
-elif [[ $line == [0-9]* ]]; then
-  x=$(echo "$line" | cut -d " " -f 3)
-  y=$(echo "$line" | cut -d " " -f 4)
-  z=$(echo "$line" | cut -d " " -f 5)
-  echo "	pt3dadd($x, $y, $z, 1)" >> $2
-fi
-done < temp.txt
-echo "}" >> $2
-echo  >> $2
-rm temp.txt
+# Replaces original # lines (which now read "pt3dadd(,,,1) with text to define section
+awk '/pt3dadd\(,,,1\)/{gsub("pt3dadd","}\naccess sections["++p"]\nUndefined.append()\nsections["p"] { ");} 1' temp1.txt > temp2.txt
+
+# Remove unecessary (,,,1) text. Should be able to do this as part of the previous awk command but couldn't work how
+sed -i 's/ (,,,1)$//' temp2.txt
+
+# Add start of file text
+echo -e "objref Undefined\nUndefined = new SectionList()\ncreate sections[$num_sections]\n}\naccess sections[0]\nUndefined.append()\nsections[0] {" | cat - temp2.txt > $2
+
+# Add missing bracket to end of file
+echo } >> $2
+
+# Remove temporary files
+rm temp1.txt
+rm temp2.txt
